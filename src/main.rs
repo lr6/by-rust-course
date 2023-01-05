@@ -1,28 +1,51 @@
-// rust 程序入口函数，跟其他语言一样，都是 main，该函数目前无返回值
+struct Struct {
+    e: i32
+}
 fn main() {
-    // 使用let来生命变量，进行绑定，a是不可变的
-    // 此处没有指定a的类型，编译器会默认根据a的值推断类型：i32，有符号32位整数
-    // 语句的末尾必须以分号结尾
-    let a = 10;
-    // 主动指定b的类型
-    let b: i32 = 20;
-    // 这里有两点值得注意
-    // 1. 可以在数值中带上类型：30i32 表示数值是30，类型为i32
-    // 2. c是可变的，mut是mutable的缩写
-    // let mut c = 30i32;
-    let c = 30i32;
-    // 还可以在数值和类型中间加一个下划线，让可读性更好
-    let d = 30_i32;
-    // 跟其他语言一样，可以使用一个函数的返回值作为另一个函数的参数
-    let e = add(add(a, b), add(c, d));
-    // println! 是宏定义，看起来像是函数但是它返回的是宏定义的代码块
-    // 该函数将指定的格式化字符串输出到标准输出中（控制台）
-    // {}是占位符，再具体之星过程中，会把e的值带进来
-    println!("(a + b) + (c + d) = {}", e)
+    // 使用下划线开头忽略未使用的变量
+    let _y = 10;
+    let mut x = 5;
+    println!("x = {}", x);
+    x = 6;
+    println!("x = {}", x);
+    destructuring_assignment();
+    fn2();
+    shadowing();
 }
 
-// 定义一个函数，输入两个i32类型的32位有符号整数，返回它们的和
-fn add(i: i32, j: i32) -> i32 {
-    // 不要为 i+j 添加 ;，这会改变语法导致函数返回 () 而不是 i32
-    i + j
+fn destructuring_assignment() {
+    let (a, mut b) : (bool, bool) = (true, false);
+    // a = true，不可变 b = false, 可变
+    println!("a = {:?}, b = {:?}", a, b);
+    b = true;
+    assert_eq!(a, b);
+}
+
+fn fn2() {
+    // 常量使用 const 关键字而不是 let 关键字来声明，并且值的类型必须标注。
+    // Rust 常量的命名约定是全部字母都使用大写，并使用下划线分隔单词，另外对数字字面量可插入下划线以提高可读性
+    const MAX_POINTS: u32 = 100_000;
+    println!("常量为：{}", MAX_POINTS);
+    let (a, b, c, d, e);
+    (a, b) = (1, 2);
+    // _ 代表匹配一个值，但是我们不关心具体的值是什么，因此没有使用一个变量名而是使用了 _
+    [c, .., d, _] = [1, 2, 3, 4, 5];
+    Struct { e, .. } = Struct { e: 5 };
+    assert_eq!([1, 2, 1, 4, 5], [a, b, c, d, e]);
+}
+
+// 变量遮蔽(shadowing)
+// Rust 允许声明相同的变量名，在后面声明的变量会遮蔽掉前面声明的，如下所示：
+fn shadowing() {
+    let x = 5;
+    let x = x + 1;
+    {
+        let x = x * 2;
+        println!("花括号里面的x={}", x);
+    }
+    println!("花括号外面的x={}", x);
+
+    let spaces = "123";
+    let spaces = spaces.len();
+    println!("spaces的长度：{}", spaces);
 }
