@@ -1,32 +1,24 @@
 /**
- * 字符类型 char
- * 在rust语言中，不仅仅ASCII字符，所有的unicode值，都可以作为 rust的字符
- * rust 的字符只能用 '' 来表示，"" 是留给字符串的
+ * 语句（statement）和表达式（expression）
  * 
- * 布尔 bool
- * 只有两个值，true 和 false， 布尔值占用内存一个字节
+ * 语句会执行一些操作，但是不会返回值
  * 
- * 单元类型
- * 只有一个值 就是 ()
- * main函数的返回值 就是 ()
- * println!()的返回值也是 ()
- * 没有返回的函数，叫做发散函数( diverge function )
- * 可以用 () 作为map的值，表示我们只关注key,不关注 value(不占用内存).
+ * 表达式会在求值后，会返回值
+ * 凡是可以返回值的，都是表达式
+ * 表达式如果不返回值，会隐式的返回单元类型()
+ * 
+ * 基于表达式是函数式语言的重要特征，表达式总要返回值。
  */
 fn main() {
-    let c = 'z';
-    let z = 'ℤ';
-    let g = '国';
-    let heart_eyed_cat = '😻';
-    let x = '中';
-    println!("{},{},{},{}", c, z, g, heart_eyed_cat);
-    println!("字符'中'占用了{}字节的内存大小",std::mem::size_of_val(&x));
-
-    bool();
+    // 表达式可以成为语句的一部分
+    let _y = 6; // 语句，6就是表达式
+    add_with_extra(4, 5);
 }
 
-fn bool() {
-    let x = true;
-    let y: bool = false;
-    println!("x={}, y= {}", x, y);
+
+fn add_with_extra(x: i32, y: i32) -> i32 {
+    let x = x + 1; // 语句
+    let y = y + 5; // 语句
+    // 表达式不能包含分号,加了分号，就变成语句了
+    x + y // 表达式
 }
