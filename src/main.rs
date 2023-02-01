@@ -1,65 +1,103 @@
 /**
- * 所有程序语言最需要和计算机的内存交互，如何从内存中申请空间运行程序，
- * 如何在不需要该空间的时候，释放该空间， 是重中之重。
- * 大概有个流派
- * 1. 垃圾回收机制（GC）：在程序运行时不断寻找不在使用的内存。 典型代表：java go
- * 2. 手动管理内存的分配和释放：在程序中，通过调用函数的方式来申请和释放内存。 典型代表？：c++
- * 3. 通过所有权来管理内存： 编译器在编译阶段根据一系列规则进行检查
- * 
- * 栈： 按照顺序存储数据并以相反顺序取出数据。简称：后进先出。 进栈 / 出栈
- * 栈中的所有数据，必须占用已知固定大小的内存空间
- * 
- * 堆： 对于未知数据大小的数据，需要存储到堆上。
- * 把数据存储到堆上： 操作系统在堆上申请一定大小的空间，把它标记为已使用，并返回
- * 表示该未知的指针，这个过程叫做在堆上分配内存。然后把指针推入栈中，因为指针的大小是已知且固定的
- * 后续使用，通过栈中的指针来获取堆是的实际位置，进而访问数据
- * 
- * 写入区别：栈比堆快一些
- * 读取区别：栈比堆快一些（cpu的高速缓存会减少对内存的访问，高速缓存的访问速度比访问内存快大约10倍
- * 栈数据可以存储在cpu的高速缓存中，堆数据只能存储在内存中访问堆上的数据比栈的数据）
- *  
- * 所有权
- * 1. rust中每一个值都被一个变量所拥有，该变量被称为值的所有者
- * 2. 一个值只能被一个变量所拥有，或者说一个值只能拥有一个变量
- * 3. 当所有者（变量）离开当前作用域时，这个值将被丢弃（drop）
- * 
- * 字符串
- * 1.字符串字面值是不可变得，因此被硬编码到程序代码中
- * 2. 有些字符串的值，在编写代码时，值是未知的
- * 
- * copy特征
- * 如果一个类型拥有copy特征，一个旧的变量在被赋值给新的变量后，旧的变量依然可以使用
- * 任何基本类型的组合可以copy,不需要分配内存或者以某种形式资源的类型可以copy
- * 整数类型，浮点数类型，字符类型，布尔类型，元组（其包含的类型可以copy）,&T不可变引用 都是可以copy的
- * &mut T 可变引用是不可以copy的
+ * 规则总结
+ * 1. 同一时刻，你只能拥有一个可变引用或者多个不可变引用
+ * 2. 引用必须总是有效的
  */
 
  fn main() {
-   // 字符串字面值
-   let s = "hello";
-   // 动态字符串类型
-   // :: 是一种调用操作符，这里表示调用String的from方法
-   let mut s2 = String::from("hello");
-   s2.push_str(",world");
-   println!("s = {}", s);
+   let x = 5;
+   // y是x的一个引用
+   let y = &x;
+   assert_eq!(5, x);
+   // *y 解出引用所指向的值（也叫做解引用）
+   assert_eq!(5, *y);
+   quote();
+   mut_quote();
+   mult_quote();
+   all_quote();
+   majorzation();
+   dangle();
+}
+
+// 不可变引用
+fn quote() {
+   let s = String::from("hello");
+   let len = calculate_length(&s);
+   println!("{} 的 length = {}", s, len);
+}
+
+fn calculate_length(s: &String) -> usize {
+   s.len()
+}
+
+// 可变引用
+// 同一作用域，特定数据只能有一个可变引用
+fn mut_quote() {
+   let mut s = String::from("hello");
+   change_str(&mut s);
+
+   println!("s={}", s);
+}
+
+fn change_str(s: &mut String) {
+   s.push_str(", world");
+}
+
+fn mult_quote() {
+   let mut str = String::from("Hello");
+   let s1 = &mut str;
+   println!("s1 = {}", s1);
+   // 第二个可变借用需要在第一个可变借用使用之前
+   // 这样避免了数据竞争,数据竞争行为会带来下面3个行为
+   // 1. 两个或更多的指针同时访问同一数据
+   // 2. 至少有一个指针被用来写入数据
+   // 3. 没有同步数据访问的机制
+   let s2 = &mut str;
    println!("s2 = {}", s2);
-   owner();
-   clone_data();
 }
 
-fn owner() {
-   let s3 = String::from("aka");
-   let s4 = s3;
-   println!("{}", s4);
-
-   let s5 = "hello";
-   let s6 = s5;
-   println!("s5 = {}", s5);
-   println!("s6 = {}", s6);
-}
-
-fn clone_data() {
-   let s1 = String::from("cloneString");
-   let s2 = s1.clone();
+/**
+ * 同一作用域，可变借用和不可变引用不可同时存在
+ * 不可变引用可以存在多份，可变引用不行
+ */
+fn all_quote() {
+   let mut str = String::from("Hello");
+   let s1 = &str;
+   let s2 = &str;
    println!("{}, {}", s1, s2);
+   {
+      let s3 = &mut str;
+      println!("{}", s3);
+   }
 }
+
+// 编译器也一直在优化
+// 对于编译器优化行为叫做：Non-Lexical Lifetimes(NLL) 专门用于找到某个引用在作用域（}）结束前，就不在使用的代码位置
+fn majorzation() {
+   let mut s = String::from("hello");
+
+    let r1 = &s;
+    let r2 = &s;
+    println!("{} and {}", r1, r2);
+    // 新编译器中，r1,r2作用域在这里结束
+
+    let r3 = &mut s;
+    println!("{}", r3);
+} // 老编译器中，r1、r2、r3作用域在这里结束
+  // 新编译器中，r3作用域在这里结束
+
+/**
+ * 悬垂引用（Dangling References）也叫做悬垂指针
+ * 意思是某个指针指向某个值后，这个值后面被释放了，而指针仍然存在，指针指向的空间可能
+ * 没有任何值或者已经被其他变量所使用
+ */
+ fn dangle() -> String { // dangle 返回一个字符串的引用
+ 
+     let s = String::from("hello"); // s 是一个新字符串
+ 
+     //&s // 返回字符串 s 的引用
+     s // 返回s就好了
+ } // 这里 s 离开作用域并被丢弃。其内存被释放。
+   // 危险！
+ 
+ 
